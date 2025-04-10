@@ -6,8 +6,8 @@ const SpaceAvailability = () => {
   // Dummy data for available spaces
   const spaces = [
     { id: 1, type: 'Truck', price: 50 },
-    { id: 2, type: 'Trailer', price: 40 },
-    { id: 3, type: 'RV', price: 60 },
+    { id: 2, type: 'Truck', price: 50 },
+    { id: 3, type: 'Truck', price: 50 },
   ];
 
   return (
