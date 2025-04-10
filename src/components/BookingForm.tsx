@@ -312,7 +312,7 @@ const BookingForm = () => {
                     type="submit"
                     className="w-full"
                     disabled={isLoading || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate}
-                    variant="accent"
+                    variant="primary"
                 >
                     {isLoading ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
