@@ -1,6 +1,6 @@
 "use client";
 
-import { PaymentForm } from './PaymentForm';
+import PaymentForm from './PaymentForm';
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -31,4 +31,3 @@ const CheckoutPage = () => {
 };
 
 export default CheckoutPage;
-
