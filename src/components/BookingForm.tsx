@@ -32,7 +32,8 @@ const BookingForm = () => {
       description: `Booking requested for ${format(date, "PPP")} for ${duration} days.`,
     });
 
-    router.push('/checkout');
+    // Navigate to checkout with date and duration as URL parameters
+    router.push(`/checkout?date=${format(date, "yyyy-MM-dd")}&duration=${duration}`);
   };
 
   return (
@@ -87,3 +88,4 @@ const BookingForm = () => {
 };
 
 export default BookingForm;
+

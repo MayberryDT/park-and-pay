@@ -1,24 +1,29 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
+
+interface BookingDetails {
+  date: string | null;
+  duration: string | null;
+}
+
 const ConfirmationPage = () => {
-  // Dummy data for booking details
-  const bookingDetails = {
-    bookingId: '1234567890',
-    spaceType: 'Truck',
-    date: '2024-07-15',
-    duration: 7,
-    totalPrice: 350,
+  const searchParams = useSearchParams();
+
+  const bookingDetails: BookingDetails = {
+    date: searchParams.get('date'),
+    duration: searchParams.get('duration'),
   };
+
+  const totalPrice = bookingDetails.duration ? parseInt(bookingDetails.duration) * 50 : 0;
 
   return (
     <div className="max-w-md mx-auto py-10">
       <h1 className="text-2xl font-bold mb-5">Booking Confirmation</h1>
-      <div className="border rounded-md p-4">
-        <p className="text-sm text-muted-foreground">Booking ID: {bookingDetails.bookingId}</p>
-        <p className="text-sm text-muted-foreground">Space Type: {bookingDetails.spaceType}</p>
-        <p className="text-sm text-muted-foreground">Date: {bookingDetails.date}</p>
-        <p className="text-sm text-muted-foreground">Duration: {bookingDetails.duration} days</p>
-        <p className="text-sm text-muted-foreground">Total Price: ${bookingDetails.totalPrice}</p>
+      <div className="rounded-md p-4 bg-secondary">
+        <p className="text-sm text-secondary-foreground">Date: {bookingDetails.date}</p>
+        <p className="text-sm text-secondary-foreground">Duration: {bookingDetails.duration} days</p>
+        <p className="text-sm text-secondary-foreground">Total Price: ${totalPrice}</p>
         <p className="text-sm text-green-500 mt-4">Payment Successful!</p>
       </div>
     </div>
@@ -26,3 +31,4 @@ const ConfirmationPage = () => {
 };
 
 export default ConfirmationPage;
+
