@@ -1,14 +1,15 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const PaymentForm = () => {
   return (
     <form className="space-y-4">
       <div>
-        <label htmlFor="cardholderName" className="block text-sm font-medium text-foreground">
+        <Label htmlFor="cardholderName" className="block text-sm font-medium text-slate-gray">
           Cardholder Name
-        </label>
+        </Label>
         <Input
           type="text"
           id="cardholderName"
@@ -18,9 +19,9 @@ const PaymentForm = () => {
         />
       </div>
       <div>
-        <label htmlFor="cardNumber" className="block text-sm font-medium text-foreground">
+        <Label htmlFor="cardNumber" className="block text-sm font-medium text-slate-gray">
           Card Number
-        </label>
+        </Label>
         <Input
           type="text"
           id="cardNumber"
@@ -31,9 +32,9 @@ const PaymentForm = () => {
       </div>
       <div className="flex space-x-4">
         <div>
-          <label htmlFor="expiryDate" className="block text-sm font-medium text-foreground">
+          <Label htmlFor="expiryDate" className="block text-sm font-medium text-slate-gray">
             Expiry Date
-          </label>
+          </Label>
           <Input
             type="text"
             id="expiryDate"
@@ -43,9 +44,9 @@ const PaymentForm = () => {
           />
         </div>
         <div>
-          <label htmlFor="cvv" className="block text-sm font-medium text-foreground">
+          <Label htmlFor="cvv" className="block text-sm font-medium text-slate-gray">
             CVV
-          </label>
+          </Label>
           <Input
             type="text"
             id="cvv"
