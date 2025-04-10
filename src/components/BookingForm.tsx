@@ -8,11 +8,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
 const BookingForm = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [duration, setDuration] = useState('');
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,12 +26,13 @@ const BookingForm = () => {
       });
       return;
     }
-    // Handle form submission here
-    console.log('Form submitted', { date, duration });
+
     toast({
       title: "Success",
       description: `Booking requested for ${format(date, "PPP")} for ${duration} days.`,
     });
+
+    router.push('/checkout');
   };
 
   return (
