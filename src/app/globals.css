@@ -14,7 +14,8 @@
 
     --background: var(--ivory);
     --foreground: var(--slate-gray);
-    --primary: var(--sage-green);
+    /* Changed primary color to blue */
+    --primary: #007bff; 
     --secondary: var(--stone-gray);
     --accent: var(--muted-teal);
     --radius: 0.5rem;

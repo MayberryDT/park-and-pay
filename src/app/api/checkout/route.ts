@@ -22,8 +22,9 @@ const calculateDurationServerSide = (entryDateStr: string, exitDateStr: string):
   try {
     const entry = parseISO(entryDateStr);
     const exit = parseISO(exitDateStr);
-    if (exit < entry) return 0; // Ensure exit date is not before entry date
-    return differenceInCalendarDays(exit, entry) + 1; // Inclusive calculation
+    if (exit <= entry) return 0; // Ensure exit date is after entry date
+    // Calculate the difference in days (number of nights)
+    return differenceInCalendarDays(exit, entry); 
   } catch (e) {
     console.error("Error parsing dates for duration calculation:", e);
     return 0;
@@ -76,7 +77,12 @@ export async function POST(request: Request) {
     if (serverCalculatedDuration <= 0 || isNaN(clientDurationNum) || serverCalculatedDuration !== clientDurationNum) {
       console.warn(`Duration mismatch/invalid: Client=${duration}, Server=${serverCalculatedDuration}. Using server duration.`);
       if(serverCalculatedDuration <= 0) {
-         return NextResponse.json({ error: 'Invalid entry/exit date combination.' }, { status: 400 });
+         // Also check if entry and exit dates are the same, which results in 0 duration
+         if (entryDate === exitDate) {
+             return NextResponse.json({ error: 'Entry and Exit dates cannot be the same.' }, { status: 400 });
+         } else {
+             return NextResponse.json({ error: 'Invalid entry/exit date combination. Exit date must be after entry date.' }, { status: 400 });
+         }
       }
       // Proceed using server-calculated duration
     }
@@ -102,7 +108,7 @@ export async function POST(request: Request) {
     const formattedExitDate = format(parseISO(exitDate), "PPP");
 
     // Update description for Stripe Checkout page
-    const description = `Truck Parking: ${formattedEntryDate} to ${formattedExitDate} (${serverCalculatedDuration} days). Plate: ${licensePlate}, Truck: ${truckNumber}`;
+    const description = `Truck Parking: ${formattedEntryDate} to ${formattedExitDate} (${serverCalculatedDuration} day${serverCalculatedDuration === 1 ? '' : 's'}). Plate: ${licensePlate}, Truck: ${truckNumber}`;
 
     // Define success and cancel URLs
     const YOUR_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'; // Ensure correct port

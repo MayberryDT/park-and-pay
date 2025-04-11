@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, differenceInCalendarDays, isValid } from "date-fns";
+import { format, differenceInCalendarDays, isValid, isAfter } from "date-fns"; // Added isAfter
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -75,8 +75,9 @@ const BookingForm = () => {
         }
         setCouponApplied(currentCouponApplied);
 
-        if (entryDate && exitDate && exitDate >= entryDate) {
-            const days = differenceInCalendarDays(exitDate, entryDate) + 1;
+        // Corrected duration calculation: exit date must be strictly AFTER entry date
+        if (entryDate && exitDate && isAfter(exitDate, entryDate)) {
+            const days = differenceInCalendarDays(exitDate, entryDate); // Removed +1
             setDuration(days);
             setTotalPrice(calculatePrice(days, currentCouponApplied));
         } else {
@@ -89,11 +90,16 @@ const BookingForm = () => {
         e.preventDefault();
         setIsLoading(true);
 
+        // Enhanced validation using the state `duration` which is now correctly calculated
         if (!entryDate || !exitDate || duration <= 0 || !licensePlate || !truckNumber) {
             let description = "Please ensure all fields are filled correctly. ";
             if (!entryDate) description += "Select a valid entry date. ";
             if (!exitDate) description += "Select a valid exit date. ";
-            if (entryDate && exitDate && duration <= 0) description += "Exit date must be on or after the entry date. ";
+            if (entryDate && exitDate && duration <= 0) {
+                 description += "Exit date must be after the entry date. ";
+            } else if (duration <= 0 && entryDate && exitDate) { // Catch if dates are same
+                 description += "Entry and Exit dates cannot be the same. ";
+            }
             if (!licensePlate) description += "License plate is required. ";
             if (!truckNumber) description += "Truck number is required. ";
             toast({
@@ -115,6 +121,7 @@ const BookingForm = () => {
         }
 
         try {
+            // Send the correctly calculated client-side duration and price for backend validation
             const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
@@ -123,8 +130,8 @@ const BookingForm = () => {
                 body: JSON.stringify({
                     date: format(entryDate, "yyyy-MM-dd"),
                     exitDate: format(exitDate, "yyyy-MM-dd"),
-                    duration: duration.toString(),
-                    price: totalPrice.toString(),
+                    duration: duration.toString(), // Use state duration
+                    price: totalPrice.toString(), // Use state total price
                     licensePlate: licensePlate,
                     truckNumber: truckNumber,
                     couponCode: finalCouponApplied ? couponCode : undefined,
@@ -134,6 +141,7 @@ const BookingForm = () => {
             const session = await response.json();
 
             if (!response.ok) {
+                // Display specific error from backend if available
                 throw new Error(session.error || 'Failed to create checkout session.');
             }
 
@@ -207,8 +215,9 @@ const BookingForm = () => {
                                 selected={entryDate}
                                 onSelect={(selectedDate) => {
                                     setEntryDate(selectedDate);
-                                    if (exitDate && selectedDate && exitDate < selectedDate) {
-                                        setExitDate(undefined);
+                                    // Also clear exit date if the new entry date is after the current exit date
+                                    if (exitDate && selectedDate && isAfter(selectedDate, exitDate)) {
+                                        setExitDate(undefined); 
                                     }
                                 }}
                                 disabled={(d) => d < today}
@@ -232,7 +241,7 @@ const BookingForm = () => {
                                     !exitDate && "text-stone-gray"
                                 )}
                                 id="exitDate"
-                                disabled={!entryDate}
+                                disabled={!entryDate} // Keep disabled if no entry date
                             >
                                 {exitDate ? format(exitDate, "PPP") : (
                                     <span>Pick an exit date</span>
@@ -244,9 +253,8 @@ const BookingForm = () => {
                                 mode="single"
                                 selected={exitDate}
                                 onSelect={setExitDate}
-                                disabled={(d) =>
-                                    d < (entryDate || today)
-                                }
+                                // Ensure exit date cannot be before or the same as entry date
+                                disabled={(d) => !entryDate || d <= entryDate}
                                 initialFocus
                                 className="custom-calendar"
                             />
@@ -313,10 +321,12 @@ const BookingForm = () => {
                     </div>
                 )}
 
+                {/* Updated Button with specific blue background */}
                 <Button
                     type="submit"
-                    className="w-full"
-                    disabled={isLoading || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate} variant="primary"
+                    className="w-full bg-[#003366] text-white hover:bg-[#002244] focus-visible:ring-[#003366]"
+                    // Ensure button is disabled if duration is 0 or less
+                    disabled={isLoading || duration <= 0 || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate}
                 >
                     {isLoading ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>

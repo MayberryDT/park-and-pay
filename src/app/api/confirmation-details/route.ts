@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { format, parseISO } from 'date-fns'; // Removed unused addDays
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-03-31.basil',
+  // apiVersion: '2025-03-31.basil', // Removed invalid API version
 });
 
 // Removed unused calculateEndDate helper function
@@ -42,6 +42,8 @@ async function sendNotificationEmail(details: any) {
         }
     }
 }
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   console.log(`Received request for /api/confirmation-details`);
