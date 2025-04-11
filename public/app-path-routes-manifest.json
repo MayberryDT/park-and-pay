@@ -1,0 +1,9 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/checkout/route": "/api/checkout",
+  "/api/send-email/route": "/api/send-email",
+  "/favicon.ico/route": "/favicon.ico",
+  "/api/confirmation-details/route": "/api/confirmation-details",
+  "/confirmation/page": "/confirmation",
+  "/page": "/"
+}
