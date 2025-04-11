@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, differenceInCalendarDays } from "date-fns";
+import { format, differenceInCalendarDays, isValid } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -47,7 +47,7 @@ const calculatePrice = (durationDays: number, couponApplied: boolean): number =>
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const BookingForm = () => {
-    const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
+    const [entryDate, setEntryDate] = useState<Date | undefined>(undefined);
     const [exitDate, setExitDate] = useState<Date | undefined>(undefined);
     const [duration, setDuration] = useState(0);
     const [licensePlate, setLicensePlate] = useState('');
@@ -57,6 +57,11 @@ const BookingForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const [truckNumber, setTruckNumber] = useState<string>('');
+
+    useEffect(() => {
+        // Initialize entryDate with the current date only on the client-side
+        setEntryDate(new Date());
+    }, []);
 
     useEffect(() => {
         let currentCouponApplied = false;
@@ -311,8 +316,7 @@ const BookingForm = () => {
                 <Button
                     type="submit"
                     className="w-full"
-                    disabled={isLoading || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate}
-                    variant="primary"
+                    disabled={isLoading || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate} variant="primary"
                 >
                     {isLoading ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
