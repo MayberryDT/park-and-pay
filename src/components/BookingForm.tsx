@@ -279,7 +279,7 @@ const BookingForm = () => {
                         className="w-full"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="Enter coupon code (e.g., LOCAL175)"
+                        placeholder="Enter coupon code" // Removed example code
                     />
                     {couponApplied && (
                         <p className="text-sm text-green-600 mt-1">Coupon 'LOCAL175' applied! Monthly rate is now $175.</p>
