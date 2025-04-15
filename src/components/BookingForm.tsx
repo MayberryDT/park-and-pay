@@ -2,6 +2,8 @@
 //@ts-expect-error
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image'; // Import next/image
+import logo from './images/logo.png'; // Import the logo
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -179,100 +181,105 @@ const BookingForm = () => {
     const today = new Date(new Date().setHours(0, 0, 0, 0));
 
     return (
-        <>
-            <div className="text-center text-2xl font-semibold text-slate-gray mb-4">
-                JRiley Park & Pay
+        <div className="p-4 md:p-8">
+            {/* Logo replaces title and subtitle */}
+            <div className="flex justify-center mb-6">
+                <Image
+                    src={logo}
+                    alt="JRiley Park & Pay Logo"
+                    width={250} // Adjust width as needed
+                    height={60} // Adjust height as needed
+                    className="h-auto" // Maintain aspect ratio
+                    priority // Load logo eagerly
+                />
             </div>
-            <h1 className="text-center">
-                Book Your Parking Space
-            </h1>
             <form
                 onSubmit={handleSubmit}
-                className="max-w-md mx-auto space-y-4 p-4 bg-ivory/80"
+                className="max-w-lg mx-auto space-y-6 p-6 bg-white border border-gray-200 rounded-lg shadow-lg"
             >
-                <div>
-                    <Label htmlFor="entryDate" className="block text-sm font-medium text-slate-gray mb-1 font-bold">
-                        Select Entry Date
-                    </Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
-                                    !entryDate && "text-stone-gray"
-                                )}
-                                id="entryDate"
-                            >
-                                {entryDate ? format(entryDate, "PPP") : (
-                                    <span>Pick an entry date</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={entryDate}
-                                onSelect={(selectedDate) => {
-                                    setEntryDate(selectedDate);
-                                    // Also clear exit date if the new entry date is after the current exit date
-                                    if (exitDate && selectedDate && isAfter(selectedDate, exitDate)) {
-                                        setExitDate(undefined); 
-                                    }
-                                }}
-                                disabled={(d) => d < today}
-                                initialFocus
-                                className="custom-calendar"
-                            />
-                        </PopoverContent>
-                    </Popover>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <Label htmlFor="entryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                            Select Entry Date
+                        </Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal border-gray-300",
+                                        !entryDate && "text-gray-500"
+                                    )}
+                                    id="entryDate"
+                                >
+                                    {entryDate ? format(entryDate, "PPP") : (
+                                        <span>Pick an entry date</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={entryDate}
+                                    onSelect={(selectedDate) => {
+                                        setEntryDate(selectedDate);
+                                        if (exitDate && selectedDate && isAfter(selectedDate, exitDate)) {
+                                            setExitDate(undefined);
+                                        }
+                                    }}
+                                    disabled={(d) => d < today}
+                                    initialFocus
+                                    className="bg-white rounded-md border"
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    <div>
+                        <Label htmlFor="exitDate" className="block text-sm font-medium text-gray-700 mb-1">
+                            Select Exit Date
+                        </Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal border-gray-300",
+                                        !exitDate && "text-gray-500"
+                                    )}
+                                    id="exitDate"
+                                    disabled={!entryDate} // Keep disabled if no entry date
+                                >
+                                    {exitDate ? format(exitDate, "PPP") : (
+                                        <span>Pick an exit date</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={exitDate}
+                                    onSelect={setExitDate}
+                                    disabled={(d) => !entryDate || d <= entryDate}
+                                    initialFocus
+                                    className="bg-white rounded-md border"
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
 
                 <div>
-                    <Label htmlFor="exitDate" className="block text-sm font-medium text-slate-gray mb-1 font-bold">
-                        Select Exit Date
-                    </Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
-                                    !exitDate && "text-stone-gray"
-                                )}
-                                id="exitDate"
-                                disabled={!entryDate} // Keep disabled if no entry date
-                            >
-                                {exitDate ? format(exitDate, "PPP") : (
-                                    <span>Pick an exit date</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={exitDate}
-                                onSelect={setExitDate}
-                                // Ensure exit date cannot be before or the same as entry date
-                                disabled={(d) => !entryDate || d <= entryDate}
-                                initialFocus
-                                className="custom-calendar"
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-
-                <div>
-                    <Label htmlFor="couponCode" className="block text-sm font-medium text-slate-gray mb-1 font-bold">
+                    <Label htmlFor="couponCode" className="block text-sm font-medium text-gray-700 mb-1">
                         Coupon Code (Optional)
                     </Label>
                     <Input
                         type="text"
                         id="couponCode"
-                        className="block w-full rounded-md border-input bg-ivory border-2 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-stone-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="Enter coupon code"
+                        placeholder="Enter coupon code (e.g., LOCAL175)"
                     />
                     {couponApplied && (
                         <p className="text-sm text-green-600 mt-1">Coupon 'LOCAL175' applied! Monthly rate is now $175.</p>
@@ -280,13 +287,13 @@ const BookingForm = () => {
                 </div>
 
                 <div>
-                    <Label htmlFor="licensePlate" className="block text-sm font-medium text-slate-gray mb-1 font-bold">
+                    <Label htmlFor="licensePlate" className="block text-sm font-medium text-gray-700 mb-1">
                         License Plate Number
                     </Label>
                     <Input
                         type="text"
                         id="licensePlate"
-                        className="block w-full rounded-md border-input bg-ivory border-2 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-stone-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full"
                         value={licensePlate}
                         onChange={(e) => setLicensePlate(e.target.value)}
                         placeholder="Enter license plate number"
@@ -295,13 +302,13 @@ const BookingForm = () => {
                 </div>
 
                 <div>
-                    <Label htmlFor="truckNumber" className="block text-sm font-medium text-slate-gray mb-1 font-bold">
+                    <Label htmlFor="truckNumber" className="block text-sm font-medium text-gray-700 mb-1">
                         Truck Number
                     </Label>
                     <Input
                         type="text"
                         id="truckNumber"
-                        className="block w-full rounded-md border-input bg-ivory border-2 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-stone-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full"
                         value={truckNumber}
                         onChange={(e) => setTruckNumber(e.target.value)}
                         placeholder="Enter truck number"
@@ -309,29 +316,33 @@ const BookingForm = () => {
                     />
                 </div>
 
-                {duration > 0 && (
-                    <div className="text-md text-stone-gray">
-                        Duration: {duration} day(s)
+                {(duration > 0 || totalPrice > 0) && (
+                     <div className="p-4 bg-gray-50 rounded-md border border-gray-200 space-y-2">
+                        {duration > 0 && (
+                            <div className="text-md text-gray-800 flex justify-between">
+                                <span>Duration:</span> 
+                                <span className="font-medium">{duration} day(s)</span>
+                            </div>
+                        )}
+                        {totalPrice > 0 && (
+                            <div className="text-lg font-semibold text-gray-900 flex justify-between border-t border-gray-200 pt-2 mt-2">
+                                <span>Total Price:</span>
+                                <span>${totalPrice}</span>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {totalPrice > 0 && (
-                    <div className="text-lg font-semibold text-slate-gray">
-                        Total Price: ${totalPrice}
-                    </div>
-                )}
-
-                {/* Updated Button with specific blue background */}
+                {/* Updated Button with specific blue background */} 
                 <Button
                     type="submit"
-                    className="w-full bg-[#003366] text-white hover:bg-[#002244] focus-visible:ring-[#003366]"
-                    // Ensure button is disabled if duration is 0 or less
+                    className="w-full bg-[#003366] text-white py-2 px-4 rounded-md hover:bg-[#002244] focus-visible:ring-[#003366] focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50"
                     disabled={isLoading || duration <= 0 || totalPrice <= 0 || !licensePlate || !truckNumber || !entryDate || !exitDate}
                 >
                     {isLoading ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
             </form>
-        </>
+        </div>
     );
 };
 

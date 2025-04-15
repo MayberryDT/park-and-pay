@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image'; // Import next/image
+import logo from './images/logo.png'; // Import the logo
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, CheckCircle } from "lucide-react"; // Added CheckCircle for success
 
-// Update interface to match data from API
+// Interface remains the same
 interface BookingConfirmationDetails {
-  entryDate: string | null; // Expecting formatted date string
-  exitDate: string | null;  // Expecting formatted date string
+  entryDate: string | null;
+  exitDate: string | null;
   duration: string | null;
   totalPrice: number | null;
   currency: string;
@@ -42,7 +44,6 @@ const ConfirmationPage = () => {
           const errorData = await response.json();
           throw new Error(errorData.error || `Failed to fetch details: ${response.statusText}`);
         }
-        // API returns the new structure with entryDate and exitDate
         const data: BookingConfirmationDetails = await response.json();
         setBookingDetails(data);
       } catch (err) {
@@ -56,35 +57,48 @@ const ConfirmationPage = () => {
     fetchDetails();
   }, [sessionId]);
 
+  const renderLogo = () => (
+    <div className="flex justify-center mb-6">
+      <Image
+        src={logo}
+        alt="JRiley Park & Pay Logo"
+        width={250} // Adjust width as needed
+        height={60} // Adjust height as needed
+        className="h-auto" // Maintain aspect ratio
+        priority // Load logo eagerly
+      />
+    </div>
+  );
+
+  // Styled Loading State
   if (loading) {
-    // Loading skeleton remains the same
      return (
-      <div className="max-w-md mx-auto py-10">
-        <h1 className="text-2xl font-bold mb-5 text-slate-gray">Booking Confirmation</h1>
-         <Card>
-           <CardHeader>
-             <Skeleton className="h-6 w-3/4" />
-           </CardHeader>
-           <CardContent className="space-y-3">
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-6 w-full mt-4 bg-green-100" />
-           </CardContent>
-         </Card>
+      <div className="max-w-xl mx-auto py-10 px-4 md:px-0">
+        {renderLogo()}
+        <Card className="shadow-lg border border-gray-200 rounded-lg overflow-hidden">
+          <CardHeader className="bg-gray-50 p-4 border-b border-gray-200">
+            <Skeleton className="h-7 w-3/5 bg-gray-300 rounded" />
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <Skeleton className="h-5 w-full bg-gray-200 rounded" />
+            <Skeleton className="h-5 w-full bg-gray-200 rounded" />
+            <Skeleton className="h-5 w-full bg-gray-200 rounded" />
+            <Skeleton className="h-5 w-4/6 bg-gray-200 rounded" />
+            <Skeleton className="h-8 w-full mt-5 bg-green-200 rounded" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  // Styled Error State
    if (error) {
-    // Error alert remains the same
       return (
-        <div className="max-w-md mx-auto py-10">
-           <h1 className="text-2xl font-bold mb-5 text-destructive">Booking Confirmation Error</h1>
-           <Alert variant="destructive">
-             <Terminal className="h-4 w-4" />
-             <AlertTitle>Error</AlertTitle>
+        <div className="max-w-xl mx-auto py-10 px-4 md:px-0">
+           {renderLogo()}
+           <Alert variant="destructive" className="bg-red-50 border-red-500 text-red-800 rounded-lg shadow">
+             <Terminal className="h-5 w-5" />
+             <AlertTitle className="font-semibold">Booking Confirmation Error</AlertTitle>
              <AlertDescription>
                {error}
              </AlertDescription>
@@ -93,39 +107,62 @@ const ConfirmationPage = () => {
      );
    }
 
+  // Styled Payment Not Completed State
   if (!bookingDetails || bookingDetails.paymentStatus !== 'paid') {
-    // Payment not completed alert remains the same
       return (
-       <div className="max-w-md mx-auto py-10">
-         <h1 className="text-2xl font-bold mb-5 text-slate-gray">Booking Confirmation</h1>
-          <Alert variant="destructive">
-             <Terminal className="h-4 w-4" />
-             <AlertTitle>Payment Not Completed</AlertTitle>
+       <div className="max-w-xl mx-auto py-10 px-4 md:px-0">
+         {renderLogo()}
+          <Alert variant="destructive" className="bg-yellow-50 border-yellow-500 text-yellow-800 rounded-lg shadow">
+             <Terminal className="h-5 w-5" />
+             <AlertTitle className="font-semibold">Payment Issue</AlertTitle>
              <AlertDescription>
-               The payment for this session was not successful or the details could not be retrieved. Please try booking again or contact support.
+               {bookingDetails?.paymentStatus ? `The payment status is '${bookingDetails.paymentStatus}'. ` : "Could not retrieve payment details. "}
+               Please try booking again or contact support if payment was made.
              </AlertDescription>
            </Alert>
        </div>
      );
    }
 
-  // Use updated fields in the display
+  // Styled Success State
   return (
-    <div className="max-w-md mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-5 text-slate-gray">Booking Confirmation</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Reservation Details</CardTitle>
+    <div className="max-w-xl mx-auto py-10 px-4 md:px-0">
+      {renderLogo()}
+      <Card className="shadow-lg border border-gray-200 rounded-lg overflow-hidden">
+        <CardHeader className="bg-gray-50 p-4 border-b border-gray-200">
+          <CardTitle className="text-xl text-gray-800">Reservation Details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-slate-gray">
-           {/* Update displayed labels and use new state fields */}
-           <p><span className="font-semibold">Entry Date:</span> {bookingDetails.entryDate || 'N/A'}</p>
-           <p><span className="font-semibold">Exit Date:</span> {bookingDetails.exitDate || 'N/A'}</p>
-           <p><span className="font-semibold">Duration:</span> {bookingDetails.duration || 'N/A'} days</p>
-           <p><span className="font-semibold">Total Price:</span> ${bookingDetails.totalPrice?.toFixed(2) ?? 'N/A'} {bookingDetails.currency.toUpperCase()}</p>
-           <p><span className="font-semibold">License Plate:</span> {bookingDetails.licensePlate || 'N/A'}</p>
-           <p><span className="font-semibold">Truck Number:</span> {bookingDetails.truckNumber || 'N/A'}</p>
-           <p className="text-sage-green font-semibold pt-4">Payment Successful!</p>
+        <CardContent className="p-6 space-y-3">
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-600">Entry Date:</span>
+            <span className="text-gray-800">{bookingDetails.entryDate || 'N/A'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-600">Exit Date:</span>
+            <span className="text-gray-800">{bookingDetails.exitDate || 'N/A'}</span>
+           </div>
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-600">Duration:</span>
+            <span className="text-gray-800">{bookingDetails.duration || 'N/A'} days</span>
+           </div>
+           <div className="flex justify-between">
+            <span className="font-medium text-gray-600">License Plate:</span>
+            <span className="text-gray-800">{bookingDetails.licensePlate || 'N/A'}</span>
+          </div>
+           <div className="flex justify-between border-b border-gray-100 pb-3 mb-3">
+            <span className="font-medium text-gray-600">Truck Number:</span>
+            <span className="text-gray-800">{bookingDetails.truckNumber || 'N/A'}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-lg">
+             <span className="text-gray-700">Total Price:</span>
+             <span className="text-gray-900">
+               ${bookingDetails.totalPrice?.toFixed(2) ?? 'N/A'} {bookingDetails.currency.toUpperCase()}
+             </span>
+           </div>
+           <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md flex items-center space-x-2">
+             <CheckCircle className="h-5 w-5 text-green-600" />
+             <p className="text-green-700 font-medium text-sm">Payment Successful! Your booking is confirmed.</p>
+           </div>
         </CardContent>
       </Card>
     </div>
