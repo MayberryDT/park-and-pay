@@ -111,7 +111,11 @@ export async function POST(request: Request) {
     const description = `Truck Parking: ${formattedEntryDate} to ${formattedExitDate} (${serverCalculatedDuration} day${serverCalculatedDuration === 1 ? '' : 's'}). Plate: ${licensePlate}, Truck: ${truckNumber}`;
 
     // Define success and cancel URLs
-    const YOUR_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'; // Ensure correct port
+    let YOUR_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'; // Ensure correct port
+    // Remove trailing slash if it exists
+    if (YOUR_DOMAIN.endsWith('/')) {
+      YOUR_DOMAIN = YOUR_DOMAIN.slice(0, -1);
+    }
     const successUrl = `${YOUR_DOMAIN}/confirmation?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${YOUR_DOMAIN}/`;
 
