@@ -15,6 +15,7 @@ interface RequestBody {
     price: string;
     licensePlate: string;
     truckNumber: string;
+    couponCode?: string; // Optional coupon code
 }
 
 // Function to recalculate duration server-side
@@ -31,8 +32,9 @@ const calculateDurationServerSide = (entryDateStr: string, exitDateStr: string):
   }
 };
 
-// --- Price calculation logic remains the same --- 
-const calculatePriceServerSide = (durationDays: number): number => {
+// --- Price calculation logic --- 
+const calculatePriceServerSide = (durationDays: number, couponCode?: string): number => {
+  console.log(`[calculatePriceServerSide] Duration: ${durationDays}, Coupon Received: '${couponCode}'`); // DEBUG
   const DAILY_RATE = 10;
   const WEEKLY_RATE = 65;
   const MONTHLY_RATE = 275;
@@ -50,76 +52,94 @@ const calculatePriceServerSide = (durationDays: number): number => {
       remainingDaysAfterMonths * DAILY_RATE
   );
   let calculatedPrice = months * MONTHLY_RATE + priceForRemainingDays;
-  return Math.min(
+  let finalPrice = Math.min(
       calculatedPrice,
       durationDays * DAILY_RATE,
       Math.ceil(durationDays / DAYS_IN_WEEK) * WEEKLY_RATE,
       Math.ceil(durationDays / DAYS_IN_MONTH) * MONTHLY_RATE
   );
+  console.log(`[calculatePriceServerSide] Price before coupon: ${finalPrice}`); // DEBUG
+
+  if (couponCode && couponCode.toUpperCase() === 'LOCAL175') { // Normalize coupon check
+      console.log(`[calculatePriceServerSide] Applying LOCAL175 coupon.`); // DEBUG
+      finalPrice = 175;
+  } else {
+      console.log(`[calculatePriceServerSide] Coupon '${couponCode}' not applied or invalid.`); // DEBUG
+  }
+
+  console.log(`[calculatePriceServerSide] Final price: ${finalPrice}`); // DEBUG
+  return finalPrice;
 };
 // --- End Price calculation logic ---
 
 export async function POST(request: Request) {
   try {
     const body = await request.json() as RequestBody;
-    // Rename 'date' to 'entryDate' for clarity internally
-    const { date: entryDate, exitDate, duration, price, licensePlate, truckNumber } = body;
+    const { date: entryDate, exitDate, duration, price, licensePlate, truckNumber, couponCode } = body;
+    console.log("[POST /api/checkout] Received request body:", body); // DEBUG: Log entire body
 
-    // --- Security Best Practice: Validate Dates, Duration, and Price --- 
+    // Validate Dates, Duration, and Price
     if (!entryDate || !exitDate || !duration || !price || !licensePlate || !truckNumber) {
+      console.error("[POST /api/checkout] Error: Missing required booking details", body); // DEBUG
       return NextResponse.json({ error: 'Missing required booking details' }, { status: 400 });
     }
 
     // Recalculate duration on the server for security
     const serverCalculatedDuration = calculateDurationServerSide(entryDate, exitDate);
     const clientDurationNum = parseInt(duration, 10);
+    console.log(`[POST /api/checkout] Server Duration: ${serverCalculatedDuration}, Client Duration: ${clientDurationNum}`); // DEBUG
 
-    if (serverCalculatedDuration <= 0 || isNaN(clientDurationNum) || serverCalculatedDuration !== clientDurationNum) {
-      console.warn(`Duration mismatch/invalid: Client=${duration}, Server=${serverCalculatedDuration}. Using server duration.`);
+    if (serverCalculatedDuration <= 0 || isNaN(clientDurationNum) /* Note: Client duration mismatch check removed for now || serverCalculatedDuration !== clientDurationNum */) {
+      console.warn(`[POST /api/checkout] Duration mismatch/invalid: Client=${duration}, Server=${serverCalculatedDuration}. Handling...`); // DEBUG
       if(serverCalculatedDuration <= 0) {
-         // Also check if entry and exit dates are the same, which results in 0 duration
          if (entryDate === exitDate) {
+             console.error("[POST /api/checkout] Error: Entry and Exit dates cannot be the same."); // DEBUG
              return NextResponse.json({ error: 'Entry and Exit dates cannot be the same.' }, { status: 400 });
          } else {
+             console.error("[POST /api/checkout] Error: Invalid entry/exit date combination."); // DEBUG
              return NextResponse.json({ error: 'Invalid entry/exit date combination. Exit date must be after entry date.' }, { status: 400 });
          }
       }
-      // Proceed using server-calculated duration
+       // If duration mismatch, maybe still proceed? For now, we proceed based on server duration if > 0
     }
 
-    // Recalculate price on the server based on the *server-calculated* duration
-    const serverCalculatedPrice = calculatePriceServerSide(serverCalculatedDuration);
+    // Recalculate price on the server based on the *server-calculated* duration and received coupon
+    const serverCalculatedPrice = calculatePriceServerSide(serverCalculatedDuration, couponCode);
     const clientPriceNum = parseFloat(price);
+    console.log(`[POST /api/checkout] Server Price: ${serverCalculatedPrice}, Client Price: ${clientPriceNum}, Coupon Code Provided: '${couponCode}'`); // DEBUG
 
-    // Optional: Check if client price matches server calculation 
+    // Price validation/warning (using server price regardless)
     if (isNaN(clientPriceNum) || serverCalculatedPrice !== clientPriceNum) {
-         console.warn(`Price mismatch: Client=${clientPriceNum}, Server=${serverCalculatedPrice}. Using server price.`);
-         // Decide whether to reject or proceed with server price. Proceeding.
+         console.warn(`[POST /api/checkout] Price mismatch: Client=${clientPriceNum}, Server=${serverCalculatedPrice}. Using server price.`);
     }
 
     const priceInCents = serverCalculatedPrice * 100; 
     if (priceInCents <= 0) {
+       console.error("[POST /api/checkout] Error: Calculated price must be positive.", { serverCalculatedPrice }); // DEBUG
        return NextResponse.json({ error: 'Calculated price must be positive.' }, { status: 400 });
     }
-    // --- End Security Section ---
+    console.log(`[POST /api/checkout] Final price in cents for Stripe: ${priceInCents}`); // DEBUG
 
-    // Format dates for display (optional, can also be done in confirmation)
-    const formattedEntryDate = format(parseISO(entryDate), "PPP"); // e.g., Jul 20, 2024
+    // Format dates for display
+    const formattedEntryDate = format(parseISO(entryDate), "PPP");
     const formattedExitDate = format(parseISO(exitDate), "PPP");
-
-    // Update description for Stripe Checkout page
     const description = `Truck Parking: ${formattedEntryDate} to ${formattedExitDate} (${serverCalculatedDuration} day${serverCalculatedDuration === 1 ? '' : 's'}). Plate: ${licensePlate}, Truck: ${truckNumber}`;
 
     // Define success and cancel URLs
-    let YOUR_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'; // Ensure correct port
-    // Remove trailing slash if it exists
+    let YOUR_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+    if (!YOUR_DOMAIN) {
+      console.error("[POST /api/checkout] CRITICAL ERROR: NEXT_PUBLIC_APP_URL is not set!");
+      return NextResponse.json({ error: 'Server configuration error.' }, { status: 500 });
+    }
     if (YOUR_DOMAIN.endsWith('/')) {
       YOUR_DOMAIN = YOUR_DOMAIN.slice(0, -1);
     }
     const successUrl = `${YOUR_DOMAIN}/confirmation?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${YOUR_DOMAIN}/`;
+    console.log(`[POST /api/checkout] Stripe URLs: Success=${successUrl}, Cancel=${cancelUrl}`); // DEBUG
 
     // Create a Stripe Checkout Session
+    console.log("[POST /api/checkout] Creating Stripe session..."); // DEBUG
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -131,7 +151,7 @@ export async function POST(request: Request) {
               description: description,
               images: [],
             },
-            unit_amount: priceInCents,
+            unit_amount: priceInCents, // Use the final server-calculated price
           },
           quantity: 1,
         },
@@ -139,21 +159,21 @@ export async function POST(request: Request) {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      // Update metadata with new fields
       metadata: {
-        entryDate: entryDate,       // Store ISO format
-        exitDate: exitDate,         // Store ISO format
-        durationDays: serverCalculatedDuration.toString(), // Store server-calculated duration
+        entryDate: entryDate,
+        exitDate: exitDate,
+        durationDays: serverCalculatedDuration.toString(),
         licensePlate: licensePlate,
         truckNumber: truckNumber,
       },
     });
+    console.log("[POST /api/checkout] Stripe session created successfully:", session.id); // DEBUG
 
     // Return the session ID to the frontend
     return NextResponse.json({ sessionId: session.id });
 
   } catch (error) {
-    console.error("Error creating Stripe session:", error);
+    console.error("[POST /api/checkout] Error creating Stripe session:", error); // DEBUG
     if (error instanceof Error) {
          return NextResponse.json({ error: error.message }, { status: 500 });
     }

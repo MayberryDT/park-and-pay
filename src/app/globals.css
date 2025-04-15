@@ -12,10 +12,10 @@
     --muted-teal: #6d8299ff;
     --soft-gold: #d9c2a7ff;
 
-    --background: var(--ivory);
+    /* Softer blue palette */
+    --background: #e6f0ff; /* Soft blue background */
     --foreground: var(--slate-gray);
-    /* Changed primary color to blue */
-    --primary: #007bff; 
+    --primary: #007bff;
     --secondary: var(--stone-gray);
     --accent: var(--muted-teal);
     --radius: 0.5rem;

@@ -332,7 +332,7 @@ const calculatePrice = (durationDays, couponApplied)=>{
     let calculatedPrice = months * effectiveMonthlyRate + priceForRemainingDays;
     return Math.min(calculatedPrice, durationDays * DAILY_RATE, Math.ceil(durationDays / DAYS_IN_WEEK) * WEEKLY_RATE, Math.ceil(durationDays / DAYS_IN_MONTH) * effectiveMonthlyRate);
 };
-const stripePromise = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$stripe$2f$stripe$2d$js$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadStripe"])(("TURBOPACK compile-time value", "pk_live_51K4Jm2Greyv23Im6UmwVWD8fOir20KSotBpgCKx8MDF2vtrGkA7uZGJintFSCgsOhPwpISzTPtXb8mZjAn2vAwBO00NOehIlH5"));
+const stripePromise = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$stripe$2f$stripe$2d$js$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadStripe"])(("TURBOPACK compile-time value", "pk_test_51Q3mGcBFvwif5VbmzZurTi1jC9mpF0VbNxSHWT2IHwVbbJqVmGOF9bm4aqOd64AbL4tNz5jtvVJUdusgoiNu4ZqV00yBqHCNXG"));
 const BookingForm = ()=>{
     _s();
     const [entryDate, setEntryDate] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(undefined);
@@ -432,7 +432,7 @@ const BookingForm = ()=>{
                     price: totalPrice.toString(),
                     licensePlate: licensePlate,
                     truckNumber: truckNumber,
-                    couponCode: finalCouponApplied ? couponCode : undefined
+                    couponCode: couponCode
                 })
             });
             const session = await response.json();

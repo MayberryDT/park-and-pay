@@ -134,7 +134,7 @@ const BookingForm = () => {
                     price: totalPrice.toString(), // Use state total price
                     licensePlate: licensePlate,
                     truckNumber: truckNumber,
-                    couponCode: finalCouponApplied ? couponCode : undefined,
+                    couponCode: couponCode,
                 }),
             });
 
